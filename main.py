@@ -19,7 +19,6 @@ import random
 import pytube
 from pytube import YouTube
 import keep_alive
-import nacl #<--- Dont delete important for downloading videos
 import youtube_dl
 import time
 from discord.ext import commands,tasks
@@ -367,5 +366,4 @@ async def play(ctx, *, wat):
     
 ######################################
 
-keep_alive.keep_alive() #Makes the bot 24/7
-client.run(os.getenv("TOKEN")) #Finally run the bot
+client.run('token') #Finally run the bot

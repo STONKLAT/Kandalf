@@ -15,4 +15,4 @@ You can invite the bot to your server using this link: https://discord.com/api/o
 
 And if you just don't feel like inviting it this way, you can just clone and host it yourself!
 
-I'll only release stable and tested changes here on github, if you want to test new unreleased changes you can invite the bot to your server with the link above!
+I'll only release stable and tested changes here on github, if you want to test new unreleased changes you can check out this repl: https://replit.com/@stonklat/Kandalf#main.py!

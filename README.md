@@ -10,6 +10,9 @@ Looping! (also comming soon)
 
 Feel free to use any part of my code!
 
+# Invitation
 You can invite the bot to your server using this link: https://discord.com/api/oauth2/authorize?client_id=775746835217776662&permissions=8&scope=bot%20applications.commands
 
 And if you just don't feel like inviting it this way, you can just clone and host it yourself!
+
+I'll only release stable and tested changes here on github, if you want to test new unreleased changes you can invite the bot to your server with the link above!

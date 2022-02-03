@@ -10,6 +10,6 @@ Looping! (also comming soon)
 
 Feel free to use any part of my code!
 
-You can invite the bot to your server using this link: https://hikairusbot.janchwsto.repl.co/commands/kandalf.html
+You can invite the bot to your server using this link: https://discord.com/api/oauth2/authorize?client_id=775746835217776662&permissions=8&scope=bot%20applications.commands
 
 And if you just don't feel like inviting it this way, you can just clone and host it yourself!

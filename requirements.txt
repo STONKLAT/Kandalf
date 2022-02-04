@@ -1,2 +1,0 @@
--e git+https://github.com/oleksandr-shvab/pytube#egg=pytube
-discord.py==1.7.3

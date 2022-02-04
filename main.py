@@ -9,17 +9,14 @@ If you are being rate limited just type " kill 1 " in the replit shell
 import discord
 import os
 import asyncio
-from pytube import Search
 import subprocess
 from discord import embeds
 from time import sleep
 from os import system
 
 import random
-import pytube
-from pytube import YouTube
-import keep_alive
 import youtube_dl
+import nacl #<--- Dont delete important for downloading videos
 import time
 from discord.ext import commands,tasks
 from data import responses
@@ -32,7 +29,8 @@ stet='AKA Kandalf the II'
 #Main Prefix of the bot:
 prefix='.'
 
-
+system('pip install git+https://github.com/baxterisme/pytube')
+from pytube import YouTube, Search
 
 client = commands.Bot(command_prefix=prefix)
 
@@ -351,4 +349,4 @@ async def play(ctx, *, wat):
     
 ######################################
 
-client.run('token') #Finally run the bot
+client.run('Nzc1NzQ2ODM1MjE3Nzc2NjYy.X6q0ig.RL-PiMXoTQwsNgepzwjTVSpD8x4') #Finally run the bot

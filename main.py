@@ -348,5 +348,6 @@ async def play(ctx, *, wat):
 #--------------------------------------
     
 ######################################
+token = os.environ['TOKEN']
+client.run(token) #Finally run the bot
 
-client.run('Nzc1NzQ2ODM1MjE3Nzc2NjYy.X6q0ig.RL-PiMXoTQwsNgepzwjTVSpD8x4') #Finally run the bot

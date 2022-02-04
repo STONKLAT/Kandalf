@@ -109,42 +109,68 @@ async def status(ctx, *, stat):
 #----------------Tools-------------------
 
 @client.command()
-async def embed(ctx):
+async def embed(ctx, edit='no', id='no'):
     def check(message):
         return message.author == ctx.author and message.channel == ctx.channel
     await ctx.channel.purge(limit=1)
-    information = await ctx.send(f'🪄 Embed Creation wizard! Just follow the steps!\nType "cancel" to Cancel the setup.')
-    ask_title = await ctx.send('**Provide a title:**')
-    title = await client.wait_for('message', check=check)
-    if title.content=='cancel' or title.content=='Cancel':
-      await ask_title.delete()
-      await title.delete()
-      await information.delete()
-      await ctx.send('Setup Cancelled', delete_after=5)
-      return
-  
-    ask_desc = await ctx.send('**Provide a description:**')
-    desc = await client.wait_for('message', check=check)
+    if edit=='edit':
+      if id=='no':
+        await ctx.send('No message id provided!\nNext time do: .embed edit <id>', delete_after=5)
+      else:
+        msg = await ctx.fetch_message(id)
+        ask_new_title = await ctx.send('**Provide a new title:**')
+        new_title = await client.wait_for('message', check=check)
 
-    if desc.content=='cancel' or desc.content=='Cancel':
-      await ask_title.delete()
-      await ask_desc.delete()
-      await desc.delete()
+        ask_new_desc = await ctx.send('**Provide a new description:**')
+        new_desc = await client.wait_for('message', check=check)
+
+        new_embed = discord.Embed(title=new_title.content, description=new_desc.content, color=0x0b8bfb)
+
+        await new_title.delete()
+        await new_desc.delete()
+        await ask_new_desc.delete()
+        await ask_new_title.delete()
+        wait_con = await ctx.send('<a:loading:926170861982072902> Editing your embed...')
+        sleep(1)
+        await wait_con.delete()
+        await msg.edit(embed=new_embed)
+        
+    elif edit=='no':
+      information = await ctx.send(f'🪄 Embed Creation wizard! Just follow the steps!\nTo edit an embed type `.embed edit <message id>`\nType `cancel` to Cancel the setup.')
+      ask_title = await ctx.send('**Provide a title:**')
+      title = await client.wait_for('message', check=check)
+      if title.content=='cancel' or title.content=='Cancel':
+        await ask_title.delete()
+        await title.delete()
+        await information.delete()
+        await ctx.send('Setup Cancelled', delete_after=5)
+        return
+    
+      ask_desc = await ctx.send('**Provide a description:**')
+      desc = await client.wait_for('message', check=check)
+
+      if desc.content=='cancel' or desc.content=='Cancel':
+        await ask_title.delete()
+        await ask_desc.delete()
+        await desc.delete()
+        await title.delete()
+        await information.delete()
+        await ctx.send('Setup Cancelled', delete_after=5)
+        return
+    
+      embed = discord.Embed(title=title.content, description=desc.content, color=0x0b8bfb)
       await title.delete()
       await information.delete()
-      await ctx.send('Setup Cancelled', delete_after=5)
-      return
-    
-    embed = discord.Embed(title=title.content, description=desc.content, color=0x0b8bfb)
-    await title.delete()
-    await information.delete()
-    await desc.delete()
-    await ask_desc.delete()
-    await ask_title.delete()
-    wait_con = await ctx.send('<a:loading:926170861982072902> Creating your embed...')
-    sleep(1.5)
-    await wait_con.delete()
-    await ctx.send(embed=embed)
+      await desc.delete()
+      await ask_desc.delete()
+      await ask_title.delete()
+      wait_con = await ctx.send('<a:loading:926170861982072902> Creating your embed...')
+      sleep(1.5)
+      await wait_con.delete()
+      await ctx.send(embed=embed)
+    else:
+      await ctx.send('Not a valid command', delete_after=5)
+
 
 
 
@@ -209,47 +235,6 @@ async def amogus(ctx):
 
     
 #----------------Music section---------------------
-
-youtube_dl.utils.bug_reports_message = lambda: ''
-
-
-ytdl_format_options = {
-    'format': 'bestaudio/best',
-    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
-    'restrictfilenames': True,
-    'noplaylist': True,
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'auto',
-    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
-}
-
-
-ffmpeg_options = {
-    'options': '-vn'
-}
-
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
-
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
-        super().__init__(source, volume)
-        self.data = data
-        self.title = data.get('title')
-        self.url = ""
-
-    @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
-        loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-        if 'entries' in data:
-            # take first item from a playlist
-            data = data['entries'][0]
-        filename = data['title'] if stream else ytdl.prepare_filename(data)
-        return filename
 
 @client.command(name='join', help='Tells the bot to join the voice channel')
 async def join(ctx):

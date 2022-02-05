@@ -1,6 +1,7 @@
 '''
 Remember to not steal my code ;)
 If you are being rate limited just type " kill 1 " in the replit shell
+Website: https://hikairusbot.janchwsto.repl.co
 
 © 2022 Stonklat Corporation
 '''
@@ -9,6 +10,7 @@ If you are being rate limited just type " kill 1 " in the replit shell
 import discord
 import os
 import asyncio
+import requests, json
 import subprocess
 from discord import embeds
 from time import sleep
@@ -20,6 +22,7 @@ import nacl #<--- Dont delete important for downloading videos
 import time
 from discord.ext import commands,tasks
 from data import responses
+system('clear')
 print("**DEBUG CONSOLE**")
 
 
@@ -34,11 +37,22 @@ from pytube import YouTube, Search
 
 client = commands.Bot(command_prefix=prefix)
 
+client.loop_true=False
+
+client.paused=False
+client.sung=None
+
 client.remove_command('help')
+
+print('starting cleanup...')
+system('rm ./music/*.mp4')
+print('cleanup complete')
 #Bot Commands
 @client.event
 async def on_ready():
   await client.change_presence(activity=discord.Game(name=stet), status=discord.Status.idle)
+  if not looping.is_running():
+      looping.start()
   system('clear')
   print("**DEBUG CONSOLE**")
   print("Bot Ready")
@@ -254,6 +268,9 @@ async def leave(ctx):
   except:
     await ctx.send("<:clowncrywonky:936305409621393418> The bot is not connected to a voice channel.")
 
+
+'''
+#Old command; not used anymore
 @client.command(name='url')
 async def url(ctx, *, url):
     try :
@@ -272,13 +289,15 @@ async def url(ctx, *, url):
             await msg.edit(content='<:Patrick_Winner:936303561640378379> **Now playing:** {}'.format(yt.title))
     except:
         await ctx.send("<:clowncrywonky:936305409621393418> The bot is not connected to a voice channel.")
-
+'''
 
 @client.command(name='pause', help='This command pauses the song')
 async def pause(ctx):
     voice_client = ctx.message.guild.voice_client
     if voice_client.is_playing():
-        await voice_client.pause()
+        client.paused=True
+        voice_client.pause()
+        await ctx.send('Paused! Use `.resume` to resume the paused song!')
     else:
         await ctx.send("<:clowncrywonky:936305409621393418> Nothing is being played at the moment")
     
@@ -286,7 +305,8 @@ async def pause(ctx):
 async def resume(ctx):
     voice_client = ctx.message.guild.voice_client
     if voice_client.is_paused():
-        await voice_client.resume()
+        voice_client.resume()
+        client.paused=False
     else:
         await ctx.send("<:clowncrywonky:936305409621393418> The bot was not playing anything before this. Use play or search command")
 
@@ -294,7 +314,9 @@ async def resume(ctx):
 async def stop(ctx):
   if ctx.message.guild.voice_client.is_playing():
     voice_client = ctx.message.guild.voice_client
-    await voice_client.stop()
+    voice_client.stop()
+    client.sung='stopped'
+    await ctx.send('The song has been stopped.')
   else:
     await ctx.send("<:clowncrywonky:936305409621393418> Nothing is being played at the moment")
 
@@ -313,8 +335,14 @@ async def volume(ctx, volume: int):
     await ctx.send("yo! mate the value you've entered is not valid mate! try again!")
 '''
 @client.command()
-async def volume(ctx):
-  await ctx.send('🪄 This command is work in progress!')
+async def volume(ctx, vol):
+    vol = int(vol)
+    new_volume = vol
+    if 0 <= new_volume <= 100:
+      new_volume = new_volume / 100
+      discord.PCMVolumeTransformer = new_volume
+    else:
+      await ctx.send('Please enter a volume between 0 and 100')
 
 
 @client.command(aliases=['search'])
@@ -322,29 +350,84 @@ async def play(ctx, *, wat):
         s = Search(wat)
         result=str(s.results[0])
 
-        result_2=result[41:80]
+        result_2=result[41:300]
 
         result_3=f'https://www.youtube.com/watch?v={result_2}'
 
         result_final=result_3
         print(result_3)
 
-
         server = ctx.message.guild
         voice_channel = server.voice_client
+        client.loop_server=ctx.message.guild.voice_client
 
         async with ctx.typing():
             msg = await ctx.reply(f"**Keep in mind that Fetching may take some time. I will try shorting it in some future update.**\n<a:loading:926170861982072902> Fetching song...")
             yt = YouTube(result_final)
             video = yt.streams.filter(only_audio=True).first()
             out_file = video.download(output_path="./music")
-            voice_channel.play(discord.FFmpegPCMAudio(source=out_file))
+            try: voice_channel.play(discord.FFmpegPCMAudio(source=out_file))
+            except:
+              await msg.edit(content='Not connected to a voice channel.\nNext time before you use play use the `.join` command')
+              return
+            client.sung=result_3
+
             logs = open("music/songs.log", "a")
             logs.write(f"\n{ctx.message.author.name} is playing {yt.title} url: {result_final}\n")
             logs.close()
             await msg.edit(content='<:Patrick_Winner:936303561640378379> **Now playing:** {}'.format(yt.title))
 
+@client.command()
+async def loop(ctx, iz='huj'):
+  client.loop_server=ctx.message.guild.voice_client
+  if iz=='huj':
+    if client.loop_true==True:
+      is_loop='Enabled!'
+    else:
+      is_loop='Disabled!'
+    await ctx.send(f'Loop is now `{is_loop}`\nUse `.loop enable` or `.loop disable` to control the loop!')
+  if iz=='enable':
+    client.loop_true=True
+    await ctx.send('Loop is now enabled!')
+  elif iz=='disable' or iz=='discable':
+    client.loop_true=False
+    await ctx.send('Loop is now disabled!')
+  elif iz=='huj':
+    return
+  else:
+    await ctx.send('Wrong argument! Next time use `.loop enable` or `.loop disable`.')
+    
+  
 
+
+@tasks.loop(seconds=1)
+async def looping():
+  if client.loop_true==True:
+    try:
+      if client.loop_server.is_playing():
+        return
+      else:
+        if client.sung=='stopped':
+          return
+          print('stopped')
+        else:
+          if client.paused==True:
+            return
+            print('paused')
+          else:
+            print('Playing loop')
+            yt = YouTube(client.sung)
+            video = yt.streams.filter(only_audio=True).first()
+            sung_downloaded = video.download(output_path="./music")
+            client.loop_server.play(discord.FFmpegPCMAudio(source=sung_downloaded))
+    except:
+        return
+
+
+@client.command(pass_context=True)
+async def joke(ctx):
+  response =                         json.loads(requests.get("https://tambalapi.herokuapp.com").text)
+  await ctx.send(response[0]["joke"])
 #--------------------------------------
     
 ######################################

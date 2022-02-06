@@ -10,6 +10,11 @@ Looping! (also comming soon)
 
 Feel free to use any part of my code!
 
+**Required packages:**<br />
+• Discord.py<br />
+• pytube<br />
+• PyNaCl
+
 # Invitation
 You can invite the bot to your server using this link: https://discord.com/api/oauth2/authorize?client_id=775746835217776662&permissions=8&scope=bot%20applications.commands
 

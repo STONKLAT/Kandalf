@@ -347,12 +347,9 @@ async def play(ctx, *, url):
   except:
     await message.edit(content=f'<:Patrick_Cry:1012721642750873620> There was a problem')
   
-
-
-
-
-
-
+# Make a file called "discord_token.py" in the same directory as main.py
+# and in that file set the variable "token" to your discord bot token
+from discord_token import token
 
 # ====================> Start The bot
-client.run("Nzc1NzQ2ODM1MjE3Nzc2NjYy.G3aEsv.LRlbNW4xmYsjgCvmPbFSQMRPPq0FcJolOC06ZM")
+client.run(token)

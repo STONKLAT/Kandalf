@@ -15,24 +15,28 @@ import nacl
 import ffmpeg
 import validators
 
+# Make a file called "details.py" in the same directory as main.py
+# and in that file set the variable "token" to your discord bot token
+# and Owner_ID to your discord profile Id
+from details import token, Owner_ID
+
 print('**DEBUG CONSOLE**')
 
 # Default status:
-stet='with your mom'
-
-# Id of the creator
-stonklatID = 318365547156996096
+Bot_Status='amazing music!'
 
 # Main Prefix of the bot:
 prefix='.'
 
 client = commands.Bot(command_prefix=prefix, intents=discord.Intents.all())
 
+unsupported = '```fix\nPlease note that this command is not supported and may not even work\n```'
+
 client.remove_command('help')
 
 @client.event
 async def on_ready():
-  await client.change_presence(activity=discord.Game(name=stet), status=discord.Status.idle)
+  await client.change_presence(activity=discord.Game(name=Bot_Status), status=discord.Status.idle)
   print("Bot Ready")
 
 # ====================> Commands section
@@ -41,7 +45,7 @@ async def on_ready():
 @has_permissions(manage_messages=True)
 async def say(ctx, *, text):
     message = ctx.message
-    if ctx.message.author.id == stonklatID:
+    if ctx.message.author.id == Owner_ID:
       await message.delete()
       await ctx.send(f"{text}")
     else:
@@ -66,7 +70,7 @@ async def help(ctx):
 
 @client.command(aliases=['dm'])
 async def send_msg(ctx, who: discord.Member, *, what):
-  if ctx.message.author.id == stonklatID:
+  if ctx.message.author.id == Owner_ID:
     await ctx.channel.purge(limit=1)
     try:
       await who.send(what)
@@ -95,6 +99,8 @@ async def _8ball(ctx, *, user_response='none'):
 
 @client.command()
 async def status(ctx, *, stat):
+  if not ctx.message.author.id == Owner_ID:
+    return
   await client.change_presence(activity=discord.Game(name=stat))  
   await ctx.send(f'**My status is now** {stat}')
 
@@ -119,7 +125,7 @@ async def embed(ctx, edit='no', id='no'):
     colour=0x0b8bfb
     if edit=='edit':
       if id=='no':
-        await ctx.send('No message id provided!\nNext time do: `.embed edit <id>`. ld ', delete_after=5)
+        await ctx.send('No message id provided!\nNext time try: `.embed edit <id>`. ld ', delete_after=5)
       else:
         msg = await ctx.fetch_message(id)
         ask_new_title = await ctx.send('**Provide a new title:**')
@@ -151,7 +157,8 @@ async def embed(ctx, edit='no', id='no'):
         await information.delete()
         await ctx.send('Setup Cancelled', delete_after=5)
         return
-    
+      await title.delete()
+
       await ask.edit(content='```Provide a description```')
       desc = await client.wait_for('message', check=check)
 
@@ -164,7 +171,6 @@ async def embed(ctx, edit='no', id='no'):
         return
     
       embed = discord.Embed(title=title.content, description=desc.content, color=colour)
-      await title.delete()
       await information.delete()
       await desc.delete()
       await ask.edit(content='<a:loading:926170861982072902> `Loading` ```Compiling Your Embed```')
@@ -181,6 +187,9 @@ async def embed_error(ctx, error):
         await ctx.send(text)
 
 # ==========> Music Player Section
+
+global looping
+looping = []
 
 ffmpeg_options = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
@@ -224,7 +233,7 @@ async def leave(ctx):
 async def stop(ctx):
   if ctx.message.guild.voice_client.is_playing():
     voice_client = ctx.message.guild.voice_client
-    await voice_client.stop()
+    voice_client.stop()
   else:
     await ctx.send("<:clowncrywonky:936305409621393418> Nothing is being played at the moment")
 
@@ -314,6 +323,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 @client.command()
 async def play(ctx, *, url):
+  global looping
+  ID = ctx.message.guild.id
   try: await ctx.message.author.voice.channel.connect()
   except: pass
   if ctx.message.guild.voice_client.is_playing():
@@ -323,6 +334,12 @@ async def play(ctx, *, url):
   yt_icon = False
 
   message = await ctx.reply(f'<a:spin:1012720456954028042> **Loading...**')
+
+  async def loop(guild, voice, audio):
+    if ctx.message.guild.voice_client.is_playing(): return
+    print('*  Running loop function')
+    if ID in looping:
+      voice.play(audio)
 
   if validators.url(url):
     info_dict = ytdl.extract_info(url, download=False)
@@ -341,15 +358,29 @@ async def play(ctx, *, url):
     return
 
   try:
-    ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
+    ctx.voice_client.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(loop(ctx.guild, ctx.voice_client, player), client.loop))
     if yt_icon==True: await message.edit(content=f'<:Patrick_Winner:936303561640378379> <:youtube:801865130676846623> **Now playing:** `{player.title}`')
     else: await message.edit(content=f'<:Patrick_Winner:936303561640378379> **Now playing:** `{player.title}`')
   except:
     await message.edit(content=f'<:Patrick_Cry:1012721642750873620> There was a problem')
-  
-# Make a file called "discord_token.py" in the same directory as main.py
-# and in that file set the variable "token" to your discord bot token
-from discord_token import token
+
+@client.command()
+async def loop(ctx, status="None"):
+  await ctx.send(unsupported)
+  global looping
+  ID = ctx.message.guild.id
+
+  if status == "status" or status == "?":
+    if ID in looping: await ctx.send("Looping is Enabled!")
+    else: await ctx.send('Looping is Disabled')
+    return
+
+  if ID in looping:
+    looping.remove(ID)
+    await ctx.reply("Looping Disabled!")
+  else:
+    looping.append(ID)
+    await ctx.reply("Looping Enabled")
 
 # ====================> Start The bot
 client.run(token)

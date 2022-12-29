@@ -7,6 +7,7 @@ import asyncio
 import time
 import random
 import json
+import subprocess
 from data import *
 
 from youtube_dl import YoutubeDL
@@ -179,12 +180,60 @@ async def embed(ctx, edit='no', id='no'):
       await ctx.send(embed=embed)
     else:
       await ctx.send('Not a valid command', delete_after=5)
-
 @embed.error
 async def embed_error(ctx, error):
     if isinstance(error, MissingPermissions):
         text = "Sorry {}, you do not have permissions to do that!".format(ctx.author.mention)
         await ctx.send(text)
+
+@client.command(aliases=["server"])
+async def linux(ctx, *, command):
+    if not ctx.message.author.id == Owner_ID:
+      return
+    
+    ERROR = None
+    def check(message):
+        return message.author == ctx.author and message.channel == ctx.channel
+    if command.lower() == "terminal":
+      terminalActive = True
+      terminalContent = '```bash\n"Welcome to the Linux terminal!"\n"Please use the "§" character instead of a space in commands"\n"Write "exit" to leave the terminal"\n```'
+      terminal = await ctx.reply(terminalContent)
+      while terminalActive:
+        userCmd = await client.wait_for('message', check=check)
+        await userCmd.delete()
+        if userCmd.content.lower() == 'exit': 
+          await terminal.edit(content="```[Session ended]```", delete_after=5)
+          await ctx.message.delete()
+          return
+
+        try:
+          result = subprocess.run(userCmd.content.split('§'), stdout=subprocess.PIPE).stdout.decode('utf-8')
+          
+          if result == '': result = "\n"
+
+          terminalContent = f"\n{terminalContent[:-3]}{result}```"
+          await terminal.edit(content=f"\n{terminalContent}")
+
+        except Exception as e:
+          error_message = str(e)
+          i = error_message.find('\n')
+          error_message_discord = error_message[:i+1] + "- " + error_message[i+1:]
+          error_message_discord = f"```diff\n{error_message_discord}\n```"
+          await ctx.send(error_message_discord, delete_after=10)
+        
+
+
+    await ctx.send(f"{unsupported[:-3]}Please use '.linux terminal' instead\n```")    
+    try:
+      result = subprocess.run(command.split(), stdout=subprocess.PIPE)
+      result = result.stdout.decode('utf-8')
+      if result == '': await ctx.send("Success!")
+      await ctx.send(f'```bash\n{result}\n```')
+    except Exception as e:
+      error_message = str(e)
+      await ctx.send(f'```\n{error_message}\n```')
+      
+    
 
 # ==========> Music Player Section
 
@@ -381,6 +430,20 @@ async def loop(ctx, status="None"):
   else:
     looping.append(ID)
     await ctx.reply("Looping Enabled")
+
+# ====================> Events
+
+'''
+@client.event
+async def on_voice_state_update(member, before, after):
+    voice_state = member.guild.voice_client
+    if voice_state is None:
+        # Exiting if the bot it's not connected to a voice channel
+        return 
+
+    if len(voice_state.channel.members) == 1:
+        await voice_state.disconnect()
+'''
 
 # ====================> Start The bot
 client.run(token)
